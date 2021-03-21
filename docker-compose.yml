@@ -1,0 +1,23 @@
+version: '3.1'
+
+services:
+  app:
+    build: .
+    ports:
+      - 8080:8080
+      - 39900:39900
+    volumes:
+      - /opt/sign-this-doc/archive:/archive
+    links:
+      - redis
+    depends_on:
+      - redis
+    restart: always
+
+  redis:
+    image: redis:6.2
+    ports:
+      - 6379:6379
+    volumes:
+      - /opt/sign-this-doc/redis:/data
+    restart: always
