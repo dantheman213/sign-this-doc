@@ -4,8 +4,9 @@ const { PDFDocument } = PDFLib;
 const docScale = 2.0;
 
 let pdfDat = null;
-let currentMode = "text";
+let currentMode = "";
 
+let fCanvasItems = [];
 
 $(document).on('change', '#txtFile', (event) => {
     if (!window.File || !window.FileReader || !window.FileList || !window.Blob) {
@@ -29,6 +30,8 @@ $(document).on('change', '#txtFile', (event) => {
             console.log('PDF loaded');
             var numPages = pdf.numPages;
 
+            fCanvasItems = new Array(numPages);
+
             for (let k = 1; k < numPages + 1; k++) {
                 pdf.getPage(k).then(function(page) {
                     console.log(`Page ${k} loaded`);
@@ -37,7 +40,7 @@ $(document).on('change', '#txtFile', (event) => {
 
                     // Prepare canvas using PDF page dimensions
                     const canvasId = "canvas-" + k;
-                    $('div.canvas').append(`<div class="canvas-item" data-page-num="${k}"><canvas id="${canvasId}"></canvas></div>`);
+                    $('div.canvas').append(`<div class="canvas-item" data-page-num="${k}"><canvas id="${canvasId}" class="canvas-page"></canvas></div>`);
                     var canvas = document.getElementById(canvasId);
                     var context = canvas.getContext('2d');
                     canvas.height = viewport.height;
@@ -51,6 +54,26 @@ $(document).on('change', '#txtFile', (event) => {
                     var renderTask = page.render(renderContext);
                     renderTask.promise.then(function () {
                         console.log('Page rendered');
+
+                        const dat = canvas.toDataURL('image/jpeg');
+                        const fCanvas = new fabric.Canvas(canvasId);
+                        fCanvasItems[k - 1] = fCanvas;
+
+                        fCanvas.selection = false; // disable group selection
+
+                        // $('#' + canvasId).append(`<img src=${dat} class="doc-img" />`)
+                        // const $img = $('#' + canvasId + ' > img.doc-img').first();
+                        // const imgElem = new fabric.Image($img[0], {
+                        //     left: 0,
+                        //     top: 0,
+                        //     height: fCanvas.height,
+                        //     width: fCanvas.width,
+                        // });
+                        // fCanvas.add(imgElem);
+                        fCanvas.setBackgroundImage(dat, fCanvas.renderAll.bind(fCanvas), {
+                            // should the image be resized to fit the container?
+                            backgroundImageStretch: false
+                        });
                     });
                 });
             }
@@ -60,36 +83,40 @@ $(document).on('change', '#txtFile', (event) => {
     fileReader.readAsArrayBuffer(file);
 });
 
-$(document).on('click', 'div.canvas-item', (event) => {
-    const $elem = $(event.target);
+$(document).on('click', 'canvas.canvas-page', (event) => {
+    if (currentMode === "text") {
+        const $elem = $(event.target);
+        const fCanvas = fCanvasItems[$elem.parent().parent().data('page-num') - 1];
 
-    const offset = $elem.offset();
-    const left = (event.pageX - offset.left);
-    const top = (event.pageY);// - offset.top);
+        const offset = $elem.offset();
+        const left = (event.pageX - offset.left);
+        const top = (event.pageY - offset.top);
 
-    if (currentMode === 'text') {
-        $elem.parent().append(`<div class="text" style="top: ${top}px; left: ${left}px;">Lorem Ipsum</div>`);
+        var text = new fabric.Text('Lorem Ipsum', { left: left, top: top});
+        fCanvas.add(text);
+        currentMode = "";
     }
 });
 
+$(document).on('click', '#btnAddTextField', () => {
+    currentMode = "text";
+});
+
 $(document).on('click', '#btnDownload', async (event) => {
-    const pdfDoc = await PDFDocument.load(pdfDat);
+    const pdfDoc = await PDFDocument.create();
 
-    const pages = pdfDoc.getPages();
+    for (let k = 0; k < fCanvasItems.length; k++) {
+        $elem = $(`#canvas-${k + 1}`);
+        const jpgImageBytes = await fetch($elem[0].toDataURL('image/jpeg')).then((res) => res.arrayBuffer());
+        const jpgImage = await pdfDoc.embedJpg(jpgImageBytes);
 
-    for (let k = 0; k < pages.length; k++) {
-        const page = pages[k];
+        const page = pdfDoc.addPage();
         const { width, height } = page.getSize();
-        const cropBox = page.getCropBox();
-
-        $(`div.canvas-item[data-page-num='${k + 1}'] > div.text`).each((index, elem) => {
-            const $elem = $(elem);
-            page.drawText($elem.text(), {
-                x: $elem.position().left / docScale,
-                //y: 690,
-                y: height - ($elem.position().top / 2) - cropBox.height/2,
-                size: 12,
-            });
+        page.drawImage(jpgImage, {
+            x: 0,
+            y: 0,
+            width: width,
+            height: height,
         });
     }
 
