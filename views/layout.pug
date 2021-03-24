@@ -1,0 +1,19 @@
+doctype html
+html
+  head
+    title= title
+
+    link(rel='stylesheet', href='/css/style.css')
+    link(rel='stylesheet', href='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.7.570/pdf_viewer.min.css')
+    block head
+
+  body
+    block content
+
+    script(src="https://code.jquery.com/jquery-3.6.0.min.js" type="application/javascript" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous")
+    script(src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.7.570/pdf.min.js" type="application/javascript")
+    script(src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.7.570/pdf.worker.min.js" type="application/javascript")
+    script(src="https://unpkg.com/pdf-lib@1.16.0" type="application/javascript")
+    script(src="https://unpkg.com/downloadjs@1.4.7" type="application/javascript")
+
+    block scripts

@@ -1,0 +1,21 @@
+extends layout
+
+block head
+
+block content
+  h1= title
+  p Welcome to #{title}
+  hr
+
+  div
+    form(action="#")
+      input(type="file" id="txtFile", accept=".pdf")
+    hr
+
+    div
+      button(id="btnDownload") Download Document
+
+  div.canvas
+
+block scripts
+  script(src="/scripts/index.js")

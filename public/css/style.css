@@ -1,0 +1,9 @@
+canvas {
+    display: block;
+}
+
+div.text {
+    position: absolute;
+    height: 30px;
+    width: 140px;
+}

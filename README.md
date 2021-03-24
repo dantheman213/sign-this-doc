@@ -1,4 +1,7 @@
 # sign-this-doc
 
-TODO
+## Getting Started
 
+```
+DEBUG=sign-this-doc:* npm start
+```
