@@ -92,7 +92,7 @@ $(document).on('click', 'canvas.canvas-page', (event) => {
         const left = (event.pageX - offset.left);
         const top = (event.pageY - offset.top);
 
-        var text = new fabric.Text('Lorem Ipsum', { left: left, top: top});
+        var text = new fabric.Textbox('Lorem Ipsum', { left: left, top: top, width: 150, fontSize: 24});
         fCanvas.add(text);
         currentMode = "";
     }
