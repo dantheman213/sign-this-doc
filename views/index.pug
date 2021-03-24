@@ -13,9 +13,18 @@ block content
     hr
 
     div
-      button(id="btnAddTextField") Add Text Field
-      button(id="btnDownload") Download Document
+      div
+        button(id="btnAddTextField") Add Text Field
+        button(id="btnCreateSignature") Create Signature
+      div#frameSignatureCollection
 
+      div
+        button(id="btnDownload") Download Document
+
+      div#frameSignature.hidden
+        canvas#signature(width="640" height="480")
+        button(id="btnClearSignature") Clear
+        button(id="btnSaveSignature") Save Signature
   div.canvas
 
 block scripts

@@ -7,3 +7,15 @@ div.text {
     height: 30px;
     width: 140px;
 }
+
+.hidden {
+    display: none;
+}
+
+#frameSignature {
+
+}
+
+div.canvas-item {
+    max-width: 100%;
+}
