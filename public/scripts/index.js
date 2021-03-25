@@ -3,10 +3,14 @@ const { PDFDocument } = PDFLib;
 
 const docScale = 2.5;
 
+let totalLoadedPage = 1;
+let totalPageCount = 1;
+
 let pdfDat = null;
 let currentMode = "";
 let signaturePad = null;
 
+let currentSelectedfCanvas = null;
 let fCanvasItems = [];
 let signatureItems = [];
 let currentSelectedSignature = null;
@@ -17,76 +21,89 @@ $(document).on('change', '#txtFile', (event) => {
         return;
     }
 
-    var file = event.target.files[0];
+    $('#uploadToast').toast('show');
+    setTimeout(() => {
+        var file = event.target.files[0];
 
-    //Step 2: Read the file using file reader
-    var fileReader = new FileReader();
+        //Step 2: Read the file using file reader
+        var fileReader = new FileReader();
 
-    fileReader.onload = function() {
-        //Step 4:turn array buffer into typed array
-        pdfDat = new Uint8Array(this.result);
+        fileReader.onload = function() {
+            //Step 4:turn array buffer into typed array
+            pdfDat = new Uint8Array(this.result);
 
-        //Step 5:PDFJS should be able to read this
-        var loadingTask = pdfjsLib.getDocument(pdfDat);
+            //Step 5:PDFJS should be able to read this
+            var loadingTask = pdfjsLib.getDocument(pdfDat);
 
-        loadingTask.promise.then(function(pdf) {
-            console.log('PDF loaded');
-            var numPages = pdf.numPages;
+            loadingTask.promise.then(function(pdf) {
+                console.log('PDF loaded');
+                totalPageCount = pdf.numPages;
 
-            fCanvasItems = new Array(numPages);
+                fCanvasItems = new Array(totalPageCount);
 
-            for (let k = 1; k < numPages + 1; k++) {
-                pdf.getPage(k).then(function(page) {
-                    console.log(`Page ${k} loaded`);
+                for (let k = 1; k < totalPageCount + 1; k++) {
+                    pdf.getPage(k).then(function(page) {
+                        console.log(`Page ${k} loaded`);
 
-                    // Prepare canvas using PDF page dimensions
-                    const canvasId = "canvas-" + k;
-                    $('div.canvas').append(`<div class="canvas-item" data-page-num="${k}"><canvas id="${canvasId}" class="canvas-page"></canvas></div>`);
-                    const canvas = document.getElementById(canvasId);
+                        // Prepare canvas using PDF page dimensions
+                        const canvasId = "canvas-" + k;
+                        $('div.canvas').append(`<div class="canvas-item" data-page-num="${k}"><canvas id="${canvasId}" class="canvas-page"></canvas></div>`);
+                        const canvas = document.getElementById(canvasId);
 
-                    const viewport = page.getViewport({scale: docScale});
+                        const viewport = page.getViewport({scale: docScale});
 
-                    const context = canvas.getContext('2d');
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
+                        const context = canvas.getContext('2d');
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
 
-                    // Render PDF page into canvas context
-                    var renderContext = {
-                        canvasContext: context,
-                        viewport: viewport
-                    };
-                    var renderTask = page.render(renderContext);
-                    renderTask.promise.then(function () {
-                        console.log('Page rendered');
+                        // Render PDF page into canvas context
+                        var renderContext = {
+                            canvasContext: context,
+                            viewport: viewport
+                        };
+                        var renderTask = page.render(renderContext);
+                        renderTask.promise.then(function () {
+                            console.log('Page rendered');
 
-                        const dat = canvas.toDataURL('image/jpeg');
-                        const fCanvas = new fabric.Canvas(canvasId);
-                        fCanvasItems[k - 1] = fCanvas;
+                            const dat = canvas.toDataURL('image/jpeg');
+                            const fCanvas = new fabric.Canvas(canvasId);
+                            fCanvasItems[k - 1] = fCanvas;
 
-                        fCanvas.selection = false; // disable group selection
-                        fCanvas.setBackgroundImage(dat, fCanvas.renderAll.bind(fCanvas), {
-                            // should the image be resized to fit the container?
-                            backgroundImageStretch: false
+                            fCanvas.selection = false; // disable group selection
+                            fCanvas.setBackgroundImage(dat, fCanvas.renderAll.bind(fCanvas), {
+                                // should the image be resized to fit the container?
+                                backgroundImageStretch: false
+                            });
+
+                            totalLoadedPage += 1;
+                            if (totalLoadedPage >= totalPageCount) {
+                                setTimeout(() => {
+                                    $('#uploadToast').toast('hide');
+                                    $("#toolbar").removeClass('hide');
+                                }, 500);
+                            }
                         });
                     });
-                });
-            }
-        });
-    };
-    //Step 3:Read the file as ArrayBuffer
-    fileReader.readAsArrayBuffer(file);
+                }
+            });
+        };
+
+        //Step 3:Read the file as ArrayBuffer
+        fileReader.readAsArrayBuffer(file);
+    }, 500);
 });
 
 $(document).on('click', 'canvas.canvas-page', (event) => {
     const $elem = $(event.target);
-    const fCanvas = fCanvasItems[$elem.parent().parent().data('page-num') - 1];
+    currentSelectedfCanvas = $elem.parent().parent().data('page-num') - 1;
+    const fCanvas = fCanvasItems[currentSelectedfCanvas];
 
     const offset = $elem.offset();
     const left = (event.pageX - offset.left);
     const top = (event.pageY - offset.top);
 
     if (currentMode === "text") {
-        const text = new fabric.Textbox('Lorem Ipsum', { left: left, top: top, width: 150, fontSize: 24});
+        const text = new fabric.Textbox('Text', { left: left, top: top, width: 150, fontSize: 24});
         fCanvas.add(text);
     } else if (currentMode === "signature") {
         if (currentSelectedSignature != null) {
@@ -103,6 +120,18 @@ $(document).on('click', 'canvas.canvas-page', (event) => {
     currentMode = "";
 });
 
+$(document).on('keydown', 'body', (event) => {
+    const fCanvas = fCanvasItems[currentSelectedfCanvas];
+
+    // when DELETE key is pressed
+    if (event.keyCode === 46) {
+        if (fCanvas.getActiveObject()) {
+            //fCanvas.getActiveObject().remove();
+            fCanvas.remove(fCanvas.getActiveObject());
+        }
+    }
+});
+
 $(document).on('click', '#btnAddTextField', () => {
     currentMode = "text";
 });
@@ -110,7 +139,8 @@ $(document).on('click', '#btnAddTextField', () => {
 $(document).on('click', '#btnCreateSignature', () => {
     const canvas = $('#signature')[0];
     signaturePad = new SignaturePad(canvas);
-    $('#frameSignature').removeClass('hidden');
+    $("#signatureModal").modal("show");
+    //$('#frameSignature').removeClass('hide');
 });
 
 $(document).on('click', '#btnClearSignature', () => {
@@ -123,7 +153,8 @@ $(document).on('click', '#btnSaveSignature', () => {
         signatureItems.push(svgDat);
         $('#frameSignatureCollection').append(`<img src=${svgDat} width="150" />`);
 
-        $('#frameSignature').addClass('hidden');
+        $("#signatureModal").modal("hide");
+        //$('#frameSignature').addClass('hide');
     }
 });
 
@@ -134,27 +165,35 @@ $(document).on('click', '#frameSignatureCollection > img', (event) => {
 });
 
 $(document).on('click', '#btnDownload', async (event) => {
-    const pdfDoc = await PDFDocument.create();
+    $('#uploadToast').toast('show');
 
-    for (let k = 0; k < fCanvasItems.length; k++) {
-        fCanvasItems[k].discardActiveObject().renderAll();
+    setTimeout(async () => {
+        const pdfDoc = await PDFDocument.create();
 
-        $elem = $(`#canvas-${k + 1}`);
-        const jpgImageBytes = await fetch($elem[0].toDataURL('image/jpeg')).then((res) => res.arrayBuffer());
-        const jpgImage = await pdfDoc.embedJpg(jpgImageBytes);
+        for (let k = 0; k < fCanvasItems.length; k++) {
+            fCanvasItems[k].discardActiveObject().renderAll();
 
-        const page = pdfDoc.addPage();
-        const { width, height } = page.getSize();
-        page.drawImage(jpgImage, {
-            x: 0,
-            y: 0,
-            width: width,
-            height: height,
-        });
-    }
+            $elem = $(`#canvas-${k + 1}`);
+            const jpgImageBytes = await fetch($elem[0].toDataURL('image/jpeg')).then((res) => res.arrayBuffer());
+            const jpgImage = await pdfDoc.embedJpg(jpgImageBytes);
 
-    const pdfBytes = await pdfDoc.save();
-    download(pdfBytes, "download.pdf", "application/pdf");
+            const page = pdfDoc.addPage();
+            const { width, height } = page.getSize();
+            page.drawImage(jpgImage, {
+                x: 0,
+                y: 0,
+                width: width,
+                height: height,
+            });
+        }
+
+        const pdfBytes = await pdfDoc.save();
+        download(pdfBytes, "download.pdf", "application/pdf");
+
+        setTimeout(() => {
+            $('#uploadToast').toast('hide');
+        }, 500);
+    }, 500);
 });
 
 function trimSignatureCanvas(canvas) {

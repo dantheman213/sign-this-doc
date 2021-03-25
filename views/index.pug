@@ -3,28 +3,50 @@ extends layout
 block head
 
 block content
-  h1= title
-  p Welcome to #{title}
-  hr
+  div.container
+    div.row
+      h1 Sign This Doc!
 
-  div
-    form(action="#")
-      input(type="file" id="txtFile", accept=".pdf")
+    div.row
+      div.col(style="background-color: #0000FF")
+          div.drag-and-drop
+            form(action="#")
+              p Drag and drop a PDF, then fill and sign it.
+              input(type="file" id="txtFile", accept=".pdf")
+
     hr
 
     div
-      div
-        button(id="btnAddTextField") Add Text Field
-        button(id="btnCreateSignature") Create Signature
-      div#frameSignatureCollection
+      div#toolbar.hide(style="position: fixed; top: 100px; right: 100px; height: 500px; width: 500px; z-index: 9999;")
+        button(id="btnAddTextField").btn.btn-primary Add Text Field
+        button(id="btnCreateSignature").btn.btn-primary Create Signature
+        button(id="btnDownload").btn.btn-success Download Document
+        div#frameSignatureCollection
 
-      div
-        button(id="btnDownload") Download Document
+        div#signatureModal.modal(tabindex='-1')
+          .modal-dialog.modal-lg
+            .modal-content
+              .modal-header
+                h5.modal-title Create a new signature
+                button.btn-close(type='button' data-bs-dismiss='modal' aria-label='Close')
+              .modal-body
+                div#frameSignature
+                  canvas#signature(width="798" height="512")
+              .modal-footer
+                button(id="btnClearSignature").btn.btn-outline-primary Clear
+                button(id="btnSaveSignature").btn.btn-outline-primary Save Signature
 
-      div#frameSignature.hidden
-        canvas#signature(width="640" height="480")
-        button(id="btnClearSignature") Clear
-        button(id="btnSaveSignature") Save Signature
+    .position-fixed.bottom-0.end-0.p-3(style='z-index: 5')
+      #uploadToast.toast.hide(role='alert' aria-live='assertive' aria-atomic='true')
+        .toast-header
+          .spinner-border.text-warning(role='status')
+            span.visually-hidden Loading...
+          strong.me-auto Working
+          small Now
+          button.btn-close(type='button' data-bs-dismiss='toast' aria-label='Close')
+        .toast-body
+          | Processing your document...
+
   div.canvas
 
 block scripts
