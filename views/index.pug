@@ -18,10 +18,25 @@ block content
 
     div
       div#toolbar.hide(style="position: fixed; top: 100px; right: 100px; height: 500px; width: 500px; z-index: 9999;")
+        select#selectFontSize
+          option 12
+          option 14
+          option 16
+          option 20
+          option(selected="selected") 24
+          option 32
+          option 48
+          option 64
+          option 72
+
         button(id="btnAddTextField").btn.btn-primary Add Text Field
         button(id="btnCreateSignature").btn.btn-primary Create Signature
         button(id="btnDownload").btn.btn-success Download Document
         div#frameSignatureCollection
+          .card(style='float: right; width: 18rem;')
+            .card-body
+              h5.card-title Signatures
+
 
         div#signatureModal.modal(tabindex='-1')
           .modal-dialog.modal-lg
@@ -36,16 +51,16 @@ block content
                 button(id="btnClearSignature").btn.btn-outline-primary Clear
                 button(id="btnSaveSignature").btn.btn-outline-primary Save Signature
 
-    .position-fixed.bottom-0.end-0.p-3(style='z-index: 5')
-      #uploadToast.toast.hide(role='alert' aria-live='assertive' aria-atomic='true')
-        .toast-header
-          .spinner-border.text-warning(role='status')
-            span.visually-hidden Loading...
-          strong.me-auto Working
-          small Now
-          button.btn-close(type='button' data-bs-dismiss='toast' aria-label='Close')
-        .toast-body
-          | Processing your document...
+        .position-fixed.bottom-0.end-0.p-3(style='z-index: 5')
+          #uploadToast.toast.hide(role='alert' aria-live='assertive' aria-atomic='true')
+            .toast-header
+              .spinner-border.text-warning(role='status')
+                span.visually-hidden Loading...
+              strong.me-auto Working
+              small Now
+              button.btn-close(type='button' data-bs-dismiss='toast' aria-label='Close')
+            .toast-body
+              | Processing your document...
 
   div.canvas
 

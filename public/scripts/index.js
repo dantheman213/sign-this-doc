@@ -103,7 +103,8 @@ $(document).on('click', 'canvas.canvas-page', (event) => {
     const top = (event.pageY - offset.top);
 
     if (currentMode === "text") {
-        const text = new fabric.Textbox('Text', { left: left, top: top, width: 150, fontSize: 24});
+        const fontSize = parseInt($('#selectFontSize option:selected').text());
+        const text = new fabric.Textbox('Text', { left: left, top: top, width: 150, fontSize: fontSize});
         fCanvas.add(text);
     } else if (currentMode === "signature") {
         if (currentSelectedSignature != null) {
@@ -151,14 +152,14 @@ $(document).on('click', '#btnSaveSignature', () => {
     if (!signaturePad.isEmpty()) {
         const svgDat = trimSignatureCanvas($('#signature')[0]);
         signatureItems.push(svgDat);
-        $('#frameSignatureCollection').append(`<img src=${svgDat} width="150" />`);
+        $('#frameSignatureCollection').find('.card-body:first').append(`<button class="btn btn-outline-info"><img class="image-signature" src=${svgDat} width="150" /></button>`);
 
         $("#signatureModal").modal("hide");
         //$('#frameSignature').addClass('hide');
     }
 });
 
-$(document).on('click', '#frameSignatureCollection > img', (event) => {
+$(document).on('click', 'img.image-signature', (event) => {
     const $img = $(event.target);
     currentSelectedSignature = $img.attr('src');
     currentMode = "signature";
