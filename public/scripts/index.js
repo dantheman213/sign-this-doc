@@ -80,6 +80,7 @@ $(document).on('change', '#txtFile', (event) => {
                                 setTimeout(() => {
                                     $('#uploadToast').toast('hide');
                                     $("#toolbar").removeClass('hide');
+                                    $('div.drag-and-drop').addClass('hide');
                                 }, 500);
                             }
                         });

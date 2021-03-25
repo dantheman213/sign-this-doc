@@ -37,7 +37,6 @@ div.drag-and-drop {
     box-sizing: border-box;
     color: rgb(75, 75, 75);
     background-color: white;
-    display: block;
     font-family: adobe-clean, "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     font-size: 14px;
     font-style: normal;
