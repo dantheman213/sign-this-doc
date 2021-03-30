@@ -1,5 +1,9 @@
 # signthisdoc.app
 
+Sign and fill PDF documents securely and privately. None of your data is ever sent to the server.
+
+https://signthisdoc.app/
+
 ## Getting Started
 
 TODO
